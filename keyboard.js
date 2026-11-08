@@ -7,6 +7,26 @@ function refreshModes(){status.textContent=!powered?'':storing?'STO → variable
 function message(text){$('result').textContent=text;$('result').classList.add('notice')}
 function toolPanel(mode){if(mode){$('tool').value=mode;$('tool').onchange()}const d=document.querySelector('.card details');d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}
 function value(){return input.value?Calc.calculate(input.value,ans,deg):ans}
+
+function primeDecomposition(n){
+ if(!Number.isSafeInteger(n)||n<2)throw Error('Décomp : entier supérieur ou égal à 2');
+ if(n>1e12)throw Error('Décomp : maximum 1 000 000 000 000');
+ const factors=[];
+ const superscript=k=>String(k).replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(d)]);
+ for(let d=2;d*d<=n;d=d===2?3:d+2){
+  let count=0;while(n%d===0){n/=d;count++}
+  if(count)factors.push(String(d)+(count>1?superscript(count):''));
+ }
+ if(n>1)factors.push(String(n));
+ return factors.join(' × ');
+}
+function decomposeOnScreen(){
+ const n=value(), decomposition=primeDecomposition(n);
+ ans=n;fraction=false;
+ $('result').textContent=decomposition;
+ input.focus();
+}
+
 function put(s){undo=input.value;if(overwrite&&input.selectionStart===input.selectionEnd&&input.selectionStart<input.value.length)input.setSelectionRange(input.selectionStart,input.selectionStart+1);insert(s)}
 function variable(name){if(storing){vars[name]=value();if(name==='M')memory=vars.M;storing=false;message(name+' = '+fmt(vars[name]))}else put('('+vars[name]+')')}
 function clear(){undo=input.value;input.value='';$('result').textContent='0'}
@@ -34,7 +54,7 @@ null,null,
 ['x','a ×10ⁿ','',()=>variable('x'),()=>{ans=value();$('result').textContent=ans.toExponential(6)},'x'],
 ['log','10ⁿ','','log(','10^'],['ln','eⁿ','','ln(','exp('],
 ['Simp','(−)','A',frac,'-','A'],
-['├','Décomp','B',()=>toolPanel('euclid'),()=>toolPanel('prime'),'B'],
+['├','Décomp','B',()=>toolPanel('euclid'),decomposeOnScreen,'B'],
 ['▰/▱','Abs','C','/','abs(','C'],
 ['sin','Arcsin','D','sin(','asin(','D'],['cos','Arccos','E','cos(','acos(','E'],['tan','Arctan','F','tan(','atan(','F'],
 ['STO','RECALL','',()=>{storing=true;alpha=true;message('STO : ALPHA puis A–F, x, y ou M')},()=>{alpha=true;message('Choisir A–F, x, y ou M')}],
